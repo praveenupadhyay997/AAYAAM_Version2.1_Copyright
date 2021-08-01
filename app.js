@@ -47,14 +47,15 @@ app.use('/account', require('./routes/account'));
 app.use('/logger', require('./routes/accountantLogs'));
 app.use('/studentLogger', require('./routes/studentLogs'));
 app.use('/restore', require('./routes/restore'));
+app.use('/chequeSystem', require('./routes/chequeDetail'));
 
 // Index Route
 app.get('/', (req, res) => {
-	res.send('Invalid Endpoint');
+    res.send('Invalid Endpoint');
 });
 
 // Start Server
 app.listen(
-	PORT,
-	console.log(`Server Running in ${process.env.NODE_ENV} mode on port ${PORT}`),
+    PORT,
+    console.log(`Server Running in ${process.env.NODE_ENV} mode on port ${PORT}`),
 );

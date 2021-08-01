@@ -15,6 +15,7 @@ export class BatchService {
   generatebatchUrl: string = 'http://localhost:3000/batch';
   fetchBatchesUrl: string = 'http://localhost:3000/batch/allBatches';
   delBatchesUrl: string = 'http://localhost:3000/batch/delBatch';
+  deactivateBatchUrl: string = 'http://localhost:3000/batch/deactivateBatch';
   countBatchStrengthUrl: string = 'http://localhost:3000/batch/count';
   fetchBatchStudentsUrl: string = 'http://localhost:3000/batch/fetch';
   fetchBatchByIdUrl: string = '`http://localhost:3000/batch/getbatch`';
@@ -29,6 +30,11 @@ export class BatchService {
   delBatch(id: any): Observable<any> {
     const url = `${this.delBatchesUrl}/${id}`;
     return this.http.delete(url, httpOptions);
+  }
+  deactivateBatch(id: any): Observable<any> {
+    const url = `${this.deactivateBatchUrl}/${id}`;
+    console.log('In Batch Service File', url);
+    return this.http.post(url, httpOptions);
   }
   CountBatchStrength(id: any): Observable<any> {
     const url = `${this.countBatchStrengthUrl}/${id}`;

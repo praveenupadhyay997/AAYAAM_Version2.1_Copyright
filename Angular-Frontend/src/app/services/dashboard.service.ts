@@ -17,6 +17,7 @@ export class DashboardService {
   fetchAllStudentsUrl: string = 'http://localhost:3000/dashboard/allStudents';
   deleteStudentUrl: string = 'http://localhost:3000/dashboard/deleteStudent';
   deactivateStudentUrl: string = 'http://localhost:3000/dashboard/deactivate';
+  deactivateDemoStudentUrl: string = 'http://localhost:3000/dashboard/deactivateDemoStudent';
   fetchAllDemoStudentsUrl: string =
     'http://localhost:3000/dashboard/demoStudents';
   deleteDemoStudentUrl: string =
@@ -35,6 +36,10 @@ export class DashboardService {
   }
   deactivateStudent(id: any): Observable<any> {
     const url = `${this.deactivateStudentUrl}/${id}`;
+    return this.http.post(url, httpOptions);
+  }
+  deactivateDemoStudent(id: any): Observable<any> {
+    const url = `${this.deactivateDemoStudentUrl}/${id}`;
     return this.http.post(url, httpOptions);
   }
   fetchAllDemoStudents(): Observable<any> {

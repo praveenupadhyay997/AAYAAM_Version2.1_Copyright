@@ -1,19 +1,23 @@
 const mongoose = require('mongoose');
 
 const AayaamSchema = new mongoose.Schema({
-    class: {
-        type: String,
-    },
-    medium: {
-        type: String,
-    },
-    batch: {
-        type: String,
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
+	class: {
+		type: String,
+	},
+	medium: {
+		type: String,
+	},
+	batch: {
+		type: String,
+	},
+	createdAt: {
+		type: Date,
+		default: Date.now,
+	},
+	isDeleted: {
+		type: Boolean,
+		required: true,
+	},
 });
 
 const Batch = mongoose.model('Batch', AayaamSchema);

@@ -6,6 +6,7 @@ export class Account {
   rollNo: number = 0;
   totalFeeAmount: number = 0;
   modeOfPayment: string = '';
+  totalFeeAmountReceived: number = 0;
   board: string = '';
   noOfInstallment: number = 0;
   remarks: string = '';
@@ -21,5 +22,7 @@ export class Account {
   installFour: number = 0;
   installDateFour: Date = new Date();
   statusFour: boolean = false;
+  confirmationFile: string = '';
+  originalName: string = '';
   createdAt: Date = new Date();
 }

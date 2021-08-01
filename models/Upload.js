@@ -22,6 +22,10 @@ const AayaamSchema = new mongoose.Schema({
 		type: Date,
 		default: Date.now,
 	},
+	isDeleted: {
+		type: Boolean,
+		required: true,
+	},
 });
 
 const Upload = mongoose.model('Upload', AayaamSchema);

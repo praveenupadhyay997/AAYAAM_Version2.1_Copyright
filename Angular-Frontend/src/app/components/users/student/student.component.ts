@@ -891,6 +891,7 @@ export class StudentComponent implements OnInit {
         if (response.success) {
           this.updateStudentForm.reset();
           this.updateSuccessAlert = response.msg;
+          this.logTheBatchUpdate(this.updateStudentForm.value, 'updatebatch');
         } else {
           this.updateAlert = response.msg;
         }
@@ -898,7 +899,6 @@ export class StudentComponent implements OnInit {
     } else {
       this.updateAlert = 'Please fill valid details';
     }
-    this.logTheBatchUpdate(this.updateStudentForm.value, 'updatebatch');
   }
 
   logTheBatchUpdate(data : any, agenda : string) {
@@ -906,15 +906,17 @@ export class StudentComponent implements OnInit {
     var user : any = JSON.parse(localStorage.getItem('studentTemporaryCache') || '');
     this.oldBatch = user.batch.batch;
     this.studentLog.rollNo = user.rollNo.toString();
+    localStorage.removeItem('studentTemporaryCache');
 
-    this.studentService.getStudent(this.user.rollno).subscribe((response) => {
+    this.studentService.getStudent(parseInt(this.studentLog.rollNo)).subscribe((response) => {
       if (response.success) {
+        console.log("Response is suceessful");
         this.newBatch = response.student[0].batch.batch;
+        this.logStudentAction(user, agenda);
       } else {
         alert(response.msg);
       }
     });
-    this.logStudentAction(user, agenda);
   }
 
   logStudentAction(data: any, agenda : string) : void {

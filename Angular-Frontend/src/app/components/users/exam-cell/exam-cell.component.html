@@ -272,7 +272,7 @@
                         </button>
                         <button
                           class="btn btn-outline-info mb-2 btn-sm"
-                          (click)="detailedInfoModal()"
+                          (click)="detailedInfoModal(upload)"
                           data-toggle="modal"
                           data-target="#detailedInfoModal"
                         >
@@ -281,10 +281,11 @@
                         </button>
                         <button
                           class="btn btn-outline-danger ml-0 btn-sm"
-                          (click)="deleteUpload(upload)"
+                          (click)="deactivateUpload(upload)"
                           data-toggle="modal"
-                          data-target="#exampleModalCenterExamData"
+                          
                         >
+                        <!-- data-target="#exampleModalCenterExamData" -->
                           <i class="fa fa-trash"></i>
                           Delete
                         </button>
@@ -502,13 +503,13 @@
               </tr>
             </thead>
             <tbody class="text-center">
-              <tr>
-                <td>1</td>
-                <td>2</td>
+              <tr *ngFor="let detailedInfoExamStudent of detailedInfoExamStudents">
+                <td>{{detailedInfoExamStudent.rollNo}}</td>
+                <td>{{detailedInfoExamStudent.studentContact}}</td>
                 <td>
                   <button
                     class="btn btn-outline-danger mr-2 btn-sm"
-                    (click)="sendDetailedInfoSms()"
+                    (click)="sendDetailedInfoSms(detailedInfoExamStudent)"
                   >
                     <i class="fa fa-envelope-o"></i>
                     Send Message

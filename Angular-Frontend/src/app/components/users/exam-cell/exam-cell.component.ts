@@ -26,6 +26,9 @@ export class ExamCellComponent implements OnInit {
   students: Student[] = [];
   batches: Batch[] = [];
 
+  detailedInfoExamStudents: Student[] = [];
+  openDetailedModalUpload: Upload = new Upload();
+
   //Pagination
   collectionSize: Array<any> = [];
   totalRecords: number = 0;
@@ -191,17 +194,21 @@ export class ExamCellComponent implements OnInit {
     }
   }
 
-  deleteUpload(upload: Upload): void {
+  deactivateUpload(upload: Upload): void {
     let confirm = window.confirm(
-      'Are You Sure You Want To Delete The Uploaded Data. Continue?'
+      'Are you sure you want to delete the Exam Data of this particular exam?'
+    );
+    let confirm_again = window.confirm(
+      'ARE YOU COMPLETELY SURE WITH YOUR ACTION. CONTINUE?'
     );
     if (confirm) {
+      if (confirm_again) {
       // Removing From the UI
       this.uploadList = this.uploadList.filter(
         (u: Upload) => u._id !== upload._id
       );
       // Removing from the json server and go to contact.service.ts
-      this.examService.deleteUpload(upload._id).subscribe((response) => {
+      this.examService.deactivateExamData(upload._id).subscribe((response) => {
         if (response.success) {
           this.deleteSuccessAlert = response.msg;
         } else {
@@ -209,6 +216,7 @@ export class ExamCellComponent implements OnInit {
         }
       });
     }
+   }
   }
   // Converting Table to Excel File
   data: AOA = [this.headers];
@@ -232,11 +240,42 @@ export class ExamCellComponent implements OnInit {
     this.display = 'none';
   }
 
-  detailedInfoModal(){
-    console.log("Avinash");
+  detailedInfoModal(upload:Upload){
+    this.batchService
+      .FetchBatchStudents(upload.batch.batch)
+      .subscribe((response) => {
+        if (response.success) {
+          var details = {
+            upload: upload,
+            students: response.students,
+          };
+          this.examService.sendListOfStudent(details).subscribe((response) => {
+            if (response.success) {
+              this.detailedInfoExamStudents = response.students;
+              this.openDetailedModalUpload = upload;
+            } else {
+              this.deleteErrorAlert = response.msg;
+            }
+          });
+        }
+      });
+    
   }
 
-  sendDetailedInfoSms() {
+  sendDetailedInfoSms(detailedInfoExamStudent:Student) {
+    var detail = {
+      upload: this.openDetailedModalUpload,
+      student: detailedInfoExamStudent,
+    };
+
+    this.examService.detailedSingleSms(detail).subscribe((response) => {
+      if (response.success) {
+        this.deleteSuccessAlert = response.msg;
+      } else {
+        this.deleteErrorAlert = response.msg;
+      }
+    });
+
 
   }
 

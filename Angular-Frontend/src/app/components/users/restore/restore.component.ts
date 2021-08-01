@@ -32,73 +32,6 @@ export class RestoreComponent implements OnInit {
   activeTab = 'admitted';
   // Form Declarations
   updateDemoStudentForm: FormGroup = new FormGroup({});
-  // Getter Method
-  get name() {
-    return this.updateDemoStudentForm.get('name');
-  }
-  get fname() {
-    return this.updateDemoStudentForm.get('fname');
-  }
-  get category() {
-    return this.updateDemoStudentForm.get('category');
-  }
-  get contact() {
-    return this.updateDemoStudentForm.get('contact');
-  }
-  // Educational
-  get class() {
-    return this.updateDemoStudentForm.get('class');
-  }
-  get medium() {
-    return this.updateDemoStudentForm.get('medium');
-  }
-  get state() {
-    return this.updateDemoStudentForm.get('state');
-  }
-  get district() {
-    return this.updateDemoStudentForm.get('district');
-  }
-  // Address
-  get address() {
-    return this.updateDemoStudentForm.get('address');
-  }
-  get reference_from() {
-    return this.updateDemoStudentForm.get('reference_from');
-  }
-
-  // Couseller
-  get cname() {
-    return this.updateDemoStudentForm.get('cname');
-  }
-  get cabin() {
-    return this.updateDemoStudentForm.get('cabin');
-  }
-  // Categories Array
-  categories: any = [
-    { id: 'General', name: 'General' },
-    { id: 'SC', name: 'SC' },
-    { id: 'ST', name: 'ST' },
-    { id: 'OBC', name: 'OBC' },
-    { id: 'EWS', name: 'EWS' },
-  ];
-  classes: any = [
-    { id: '11', name: '11' },
-    { id: '12', name: '12' },
-    { id: 'Target', name: 'Target' },
-  ];
-  mediums: any = [
-    { id: 'Hindi', name: 'Hindi' },
-    { id: 'English', name: 'English' },
-  ];
-  cabins: any = [
-    { id: 'A', name: 'A' },
-    { id: 'B', name: 'B' },
-    { id: 'C', name: 'C' },
-    { id: 'D', name: 'D' },
-    { id: 'E', name: 'E' },
-    { id: 'F', name: 'F' },
-  ];
-  /*------------------------------------- */
 
   admitted(activeTab: string) {
     this.activeTab = activeTab;
@@ -148,14 +81,6 @@ export class RestoreComponent implements OnInit {
   public studentxi: number = 0;
   public studentxii: number = 0;
   public studenttarget: number = 0;
-  headers: String[] = [
-    'Reference No',
-    'Roll No',
-    'Student Name',
-    "Father's Name",
-    'Batch',
-    'Counsellor Name',
-  ];
 
   constructor(
     private fb: FormBuilder,
@@ -181,13 +106,14 @@ export class RestoreComponent implements OnInit {
       this.route.navigate(['/dashboard/student']);
     }
     this.fetchAllStudents();
-    this.dashboardService.fetchAllDemoStudents().subscribe((response) => {
-      if (response.success) {
-        this.demoStu = response.demoStudent;
-      }
-    });
+    // this.dashboardService.fetchAllDemoStudents().subscribe((response) => {
+    //   if (response.success) {
+    //     this.demoStu = response.demoStudent;
+    //   }
+    // });
+    this.fetchAllDemoStudents();
     /************Batch****************/
-    this.batchService.fetchAllBatch().subscribe((response) => {
+    this.restoreService.fetchAllRestorePointBatches().subscribe((response) => {
       if (response.success) {
         this.batches = response.batches;
         this.countBatchStrength(this.batches);
@@ -206,15 +132,16 @@ export class RestoreComponent implements OnInit {
     if (this.user.role != 'Exam Cell' && this.user.role != 'Admin') {
       this.router.navigate(['/dashboard']);
     }
-
-    this.examService.fetchAllUploads().subscribe((uploads) => {
-      if (uploads.success) {
-        this.uploadList = uploads.uploads;
-        this.totalRecords = uploads.uploads.length; //pagination
-      } else {
-        this.allAlert = uploads.msg;
-      }
-    });
+    
+    this.fetchAllExamData();
+    // this.examService.fetchAllUploads().subscribe((uploads) => {
+    //   if (uploads.success) {
+    //     this.uploadList = uploads.uploads;
+    //     this.totalRecords = uploads.uploads.length; //pagination
+    //   } else {
+    //     this.allAlert = uploads.msg;
+    //   }
+    // });
     /************Accountant**************/
     this.user = localStorage.getItem('user');
     this.user = JSON.parse(this.user);
@@ -296,10 +223,6 @@ export class RestoreComponent implements OnInit {
   fetchAllStudents() {
     this.restoreService.fetchAllStudents().subscribe((response) => {
       if (response.success) {
-        //pagination starts
-        //this.datas = response.results;
-        //this.totalRecords = response.results.length;
-        //pagination ends
         this.students = response.students;
         this.totalRecords = response.students.length; //pagination
         this.students.forEach((student) => {
@@ -309,6 +232,30 @@ export class RestoreComponent implements OnInit {
         });
       } else {
         //this.allAlert = response.msg;
+      }
+    });
+  }
+
+  //get list of all Demo students
+  fetchAllDemoStudents() {
+    this.restoreService.fetchAllDemoStudents().subscribe((response) => {
+      if (response.success) {
+        this.demoStu = response.demostudents;
+        //this.totalRecords = response.demostudents.length; //pagination
+      } else {
+        //this.allAlert = response.msg;
+      }
+    });
+  }
+
+  //get list of all Demo students
+  fetchAllExamData() {
+    this.restoreService.fetchAllExamData().subscribe((uploads) => {
+      if (uploads.success) {
+        this.uploadList = uploads.uploads;
+        this.totalRecords = uploads.uploads.length; //pagination
+      } else {
+        this.allAlert = uploads.msg;
       }
     });
   }
@@ -334,6 +281,14 @@ export class RestoreComponent implements OnInit {
   }
   // Delete Admitted Student
   deleteStudent(student: Student): void {
+    let confirm = window.confirm(
+      'Are you sure you wan to delete this admitted student?'
+    );
+    let confirm_again = window.confirm(
+      'ARE YOU COMPLETELY SURE WITH YOUR ACTION. CONTINUE?'
+    );
+    if (confirm) {
+      if (confirm_again) {
       // Removing From the UI
       this.students = this.students.filter(
         (s: Student) => s._id !== student._id
@@ -345,13 +300,19 @@ export class RestoreComponent implements OnInit {
           this.deleteErrorAlert = response.msg;
         }
       });
+    }
+   }
   }
 
   deleteDemoStudent(student: DemoStudent): void {
     let confirm = window.confirm(
-      'Are you sure you wany to delete this demo student?'
+      'Are you sure you want to delete this demo student?'
+    );
+    let confirm_again = window.confirm(
+      'ARE YOU COMPLETELY SURE WITH YOUR ACTION. CONTINUE?'
     );
     if (confirm) {
+      if (confirm_again) {
       // Removing From the UI
       this.demoStu = this.demoStu.filter(
         (u: DemoStudent) => u._id !== student._id
@@ -365,10 +326,15 @@ export class RestoreComponent implements OnInit {
             this.deleteErrorAlert = response.msg;
           }
         });
+      }
     }
   }
 
   restoreAdmittedStudent(student: Student): void {
+    let confirm = window.confirm(
+      'Are you sure you want to restore this admitted student?'
+    );
+    if (confirm) {
     // Removing From the UI
     this.students = this.students.filter((s: Student) => s._id !== student._id);
     this.restoreService
@@ -380,9 +346,48 @@ export class RestoreComponent implements OnInit {
           this.deleteErrorAlert = response.msg;
         }
       });
+    }
   }
 
-  restoreExamCell() {}
+  restoreDemoStudent(student: DemoStudent): void {
+    let confirm = window.confirm(
+      'Are you sure you want to restore this demo student?'
+    );
+    if (confirm) {
+    // Removing From the UI
+    this.demoStu = this.demoStu.filter((u: DemoStudent) => u._id !== student._id);
+    this.restoreService
+      .restoreDemoStudent(student._id)
+      .subscribe((response) => {
+        if (response.success) {
+          this.deleteSuccessAlert = response.msg;
+        } else {
+          this.deleteErrorAlert = response.msg;
+        }
+      });
+    }
+  }
+
+  restoreExamCell(upload : Upload): void {
+    let confirm = window.confirm(
+      'Are you sure you want to restore this Exam Data?'
+    );
+    if (confirm) {
+    // Removing From the UI
+    this.uploadList = this.uploadList.filter(
+      (u: Upload) => u._id !== upload._id
+    );
+    this.restoreService
+      .restoreExamData(upload._id)
+      .subscribe((response) => {
+        if (response.success) {
+          this.deleteSuccessAlert = response.msg;
+        } else {
+          this.deleteErrorAlert = response.msg;
+        }
+      });
+    }
+  }
 
   restoreAccountant() {}
 
@@ -435,37 +440,17 @@ export class RestoreComponent implements OnInit {
   allAlert!: String;
   successAlert!: String;
   uploadList: Upload[] = [];
-
-  // Getter Method for Upload Form
-  get exam_name() {
-    return this.uploadForm.get('exam_name');
-  }
-  get batch() {
-    return this.uploadForm.get('batch');
-  }
-  get exam_date() {
-    return this.uploadForm.get('exam_date');
-  }
-  get file() {
-    return this.uploadForm.get('file');
-  }
-  // Getter Method for Updating Upload Form
-  get update_exam_name() {
-    return this.updateUploadForm.get('update_exam_name');
-  }
-  get update_batch() {
-    return this.updateUploadForm.get('update_batch');
-  }
-  get update_exam_date() {
-    return this.updateUploadForm.get('update_exam_date');
-  }
   /*------------------------------------- */
 
   deleteUpload(upload: Upload): void {
     let confirm = window.confirm(
       'Are You Sure You Want To Delete The Uploaded Data. Continue?'
     );
+    let confirm_again = window.confirm(
+      'ARE YOU COMPLETELY SURE WITH YOUR ACTION. CONTINUE?'
+    );
     if (confirm) {
+      if (confirm_again) {
       // Removing From the UI
       this.uploadList = this.uploadList.filter(
         (u: Upload) => u._id !== upload._id
@@ -479,6 +464,7 @@ export class RestoreComponent implements OnInit {
         }
       });
     }
+   }
   }
 
   fetchStudents(batch: any) {

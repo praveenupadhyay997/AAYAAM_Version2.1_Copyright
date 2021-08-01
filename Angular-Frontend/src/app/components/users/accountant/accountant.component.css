@@ -76,7 +76,20 @@ h3 {
 textarea.form-control.is-invalid {
   background: none;
 }
-
+/* Upload Browse CSS */
+.custom-file > input {
+  border-radius: 0.25rem;
+  height: calc(1.5em + 0.75rem + 2px);
+}
+input[type="file"]::file-selector-button {
+  border: none;
+  height: calc(1.5em + 0.75rem + 2px);
+  border-radius: 0rem;
+  background-color: #535461;
+  color: #fff;
+  margin-right: 1rem;
+  outline: none;
+}
 /* Reference Card */
 .reference_card {
   position: relative;
@@ -255,7 +268,7 @@ footer {
   }
 }
 /*****Modal Delete*****/
-button.btn.btn-secondary.yes-button, 
+button.btn.btn-secondary.yes-button,
 button.btn.btn-primary.no-button {
   color: #fff;
   border: 2px solid #fff;
@@ -267,4 +280,20 @@ button.btn.btn-secondary.yes-button:hover {
 
 button.btn.btn-primary.no-button:hover {
   background-color: green;
+}
+.detail {
+  font-weight: 600;
+  font-size: 15px;
+  color: #535461;
+}
+.display_data{
+  display: flex;
+}
+
+.gensliphere{
+  font-size: 18px;
+  text-align: center;
+  background-color: #e37d47;
+  padding: 5px;
+  border: 2px solid #a62c2b;
 }

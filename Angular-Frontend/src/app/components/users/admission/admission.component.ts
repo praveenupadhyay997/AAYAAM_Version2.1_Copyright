@@ -67,7 +67,7 @@ export class AdmissionComponent implements OnInit {
   // Using demoStudent Model for Declaration
   demoStudent: DemoStudent = new DemoStudent();
   student: Student = new Student();
-  studentLog : StudentLogs = new StudentLogs();
+  studentLog: StudentLogs = new StudentLogs();
   batches: Batch[] = [];
   batchStrength: any = [];
   batchesJson: any[] = [];
@@ -337,7 +337,7 @@ export class AdmissionComponent implements OnInit {
     private router: Router,
     private orderPipe: OrderPipe,
     private accountService: AccountService,
-    private logger: LoggerService,
+    private logger: LoggerService
   ) {
     this.sortedCollection = orderPipe.transform(this.batches, 'examName'); //sorting
   }
@@ -724,7 +724,7 @@ export class AdmissionComponent implements OnInit {
   }
 
   //Batch Delete
-  onDeleteBatch(batch: any) {
+  onDeactivateBatch(batch: any) {
     let confirm = window.confirm(
       'Data of students associated with this batch will also be deleted. Continue?'
     );
@@ -738,10 +738,12 @@ export class AdmissionComponent implements OnInit {
           (b: any) => b.id !== batch.id
         );
         //Delete batch from backend
-        this.batchService.delBatch(batch.id).subscribe((response) => {
+        this.batchService.deactivateBatch(batch.id).subscribe((response) => {
           if (response.success) {
+            console.log(response.msg);
             this.genBatchsuccessAlert = response.msg;
           } else {
+            console.log(response.msg);
             this.genBatchErrorAlert = response.msg;
           }
         });
@@ -885,7 +887,7 @@ export class AdmissionComponent implements OnInit {
     console.log('Refresh Admission Component');
   }
 
-  logModuleRelease(agenda: string){
+  logModuleRelease(agenda: string) {
     if (this.idCardForm.valid) {
       this.authService
         .getStudent(this.idCardForm.value)
@@ -904,23 +906,23 @@ export class AdmissionComponent implements OnInit {
     this.studentLog.timeStamp = new Date();
     this.studentLog.rollNo = this.student.rollNo.toString();
     switch (agenda) {
-      case 'batchregister' :
+      case 'batchregister':
         this.studentLog.logText = `The student ${student.fullName} has been registered to ${student.batch.batch} batch. `;
         break;
-      case 'modulecard' :
+      case 'modulecard':
         this.studentLog.logText = `The student ${student.fullName} has been provided module card. `;
         break;
-      default :
+      default:
         break;
     }
-    
+
     this.logger.postTheStudentLogs(this.studentLog).subscribe((response) => {
       if (response.success) {
-        console.log("Data Logged successfully");
+        console.log('Data Logged successfully');
       } else {
         var logErrorAlert = response.msg;
         console.log(logErrorAlert);
       }
-    })
-}
+    });
+  }
 }

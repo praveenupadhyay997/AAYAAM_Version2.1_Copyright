@@ -9,7 +9,9 @@ import * as XLSX from 'xlsx';
 import { OrderPipe } from 'ngx-order-pipe';
 import { LoggerService } from 'src/app/services/logger.service';
 import { AccountantLogs } from 'src/app/Models/AccountantLogs';
-import { ThrowStmt } from '@angular/compiler';
+import { ChequeDetails } from 'src/app/Models/ChequeDetails';
+import { saveAs } from 'file-saver';
+import * as FileSaver from 'file-saver';
 
 type AOA = any[][];
 
@@ -21,6 +23,7 @@ type AOA = any[][];
 export class AccountantComponent implements OnInit {
   // Avataar Image on Card
   idUrl: any = '';
+  confirmationFile: any = '';
   //Pagination
   collectionSize: Array<any> = [];
   totalRecords: number = 0;
@@ -53,6 +56,7 @@ export class AccountantComponent implements OnInit {
   flipped = false;
   printButton: string = 'disabled';
   rollNo: number = 0;
+  globalChequeDeposit: number = 0;
   // Valid Upto Date Format
   days = 3;
   validUpto = new Date(Date.now() + this.days * 24 * 60 * 60 * 1000);
@@ -61,8 +65,15 @@ export class AccountantComponent implements OnInit {
   demoStudent: DemoStudent = new DemoStudent();
   student: Student = new Student();
   accounts: Account[] = [];
+  updatedAccounts: Account[] = [];
   pendingAccounts: Account[] = [];
+  postAccountData: Account = new Account();
   account: Account = new Account();
+  currentAccountData: Account = new Account();
+  displayChequeStatusDetails: boolean = false;
+  chequeDetails: ChequeDetails[] = [];
+  updateChequeDetail: ChequeDetails = new ChequeDetails();
+  postChequeDetail: ChequeDetails = new ChequeDetails();
   accountantLogs: AccountantLogs[] = [];
   accLogs: AccountantLogs = new AccountantLogs();
   paySlipAccount: Account = new Account();
@@ -91,41 +102,57 @@ export class AccountantComponent implements OnInit {
 
   // Installment Status Modal
   display = 'none';
+  chequeStatusDisplay = 'none';
   // Pending Dues Toggle
   dueFeesToggle: boolean = false;
   displayInstallmentToggle: boolean = false;
+  displayGenSysToggle: boolean = false;
+  //displayChequeStatusToggle: boolean = false;
   /*------------- Tabs JS ---------------*/
-  activeTab = 'dash';
+  activeTab = 'payslip';
   payslipActive: boolean = false;
   user: any;
 
   dash(activeTab: string) {
     this.activeTab = activeTab;
+    localStorage.setItem('currentTab', JSON.stringify(this.activeTab));
   }
   payslip(activeTab: string) {
     this.activeTab = activeTab;
+    localStorage.setItem('currentTab', JSON.stringify(this.activeTab));
   }
   showLog(activeTab: string) {
     this.ngOnInit();
     activeTab = 'accountantLog';
     this.activeTab = activeTab;
+    localStorage.setItem('currentTab', JSON.stringify(this.activeTab));
   }
   generatepayslip(activeTab: string) {
     this.activeTab = activeTab;
+    localStorage.setItem('currentTab', JSON.stringify(this.activeTab));
   }
   feescard(activeTab: string) {
     this.ngOnInit();
     activeTab = 'feescard';
     this.activeTab = activeTab;
+    localStorage.setItem('currentTab', JSON.stringify(this.activeTab));
   }
   feeslogger(activeTab: string) {
     this.activeTab = activeTab;
+    localStorage.setItem('currentTab', JSON.stringify(this.activeTab));
     this.getAccountantLogs();
   }
+  chequeStatus(activeTab: string) {
+    this.activeTab = activeTab;
+    localStorage.setItem('currentTab', JSON.stringify(this.activeTab));
+  }
   // Pills in Payslip Tab
-  activePill = 'new';
+  activePill = 'update';
 
   new(activePill: string) {
+    this.activePill = activePill;
+  }
+  feeGenSys(activePill: string) {
     this.activePill = activePill;
   }
   update(activePill: string) {
@@ -134,8 +161,16 @@ export class AccountantComponent implements OnInit {
 
   // New PayslipForm Declarations
   payslipForm: FormGroup = new FormGroup({});
+  // Genearate Fee Payslip Form Declarations
+  onGenFeePaySlipForm: FormGroup = new FormGroup({});
+  // Cheque Status Form Declarations
+  onChequeStatusForm: FormGroup = new FormGroup({});
+  // Cheque Status Form Declarations
+  onUpdateChequeStatusForm: FormGroup = new FormGroup({});
   // Fetch Payslip Form Declarations
   fetchPayslipForm: FormGroup = new FormGroup({});
+  // Update Payslip Form Declarations
+  genFeePaySlipSystemForm: FormGroup = new FormGroup({});
   // Update Payslip Form Declarations
   updatePayslipForm: FormGroup = new FormGroup({});
   // ID Card Reference Form
@@ -149,6 +184,7 @@ export class AccountantComponent implements OnInit {
   delAccErrorAlert!: String;
   // Error + Succcess Messages for payslip
   paySlipError!: String;
+  chequeStatusRollNoError!: String;
   paySlipSuccess!: String;
   updatePaySlipSuccess!: String;
   updatePaySlipError!: String;
@@ -162,8 +198,8 @@ export class AccountantComponent implements OnInit {
   get totalAmount() {
     return this.payslipForm.get('totalAmount'); //
   }
-  get mop() {
-    return this.payslipForm.get('mop'); //
+  get file() {
+    return this.payslipForm.get('file');
   }
   get board() {
     return this.payslipForm.get('board'); //
@@ -210,6 +246,28 @@ export class AccountantComponent implements OnInit {
   get statusFour() {
     return this.payslipForm.get('statusFour'); //
   }
+  // ------------ Generate Payslip Payslip Form ---------------------
+  get genPayslipRollNo() {
+    return this.onGenFeePaySlipForm.get('genPayslipRollNo'); //
+  }
+  // ------------ Cheque Status Entry Form ---------------------
+  get chequeStatusRollNo() {
+    return this.onChequeStatusForm.get('chequeStatusRollNo'); //
+  }
+  // ------------ On Generate Payslip Payslip System Form ---------------------
+  get receivedAmount() {
+    return this.genFeePaySlipSystemForm.get('receivedAmount'); //
+  }
+  get modeOfPayment() {
+    return this.genFeePaySlipSystemForm.get('modeOfPayment'); //
+  }
+  // ------------ On Update Cheque Status Form ---------------------
+  get chequeApprovedDate() {
+    return this.onUpdateChequeStatusForm.get('chequeApprovedDate'); //
+  }
+  get changeChequeStatusDropDown() {
+    return this.onUpdateChequeStatusForm.get('changeChequeStatusDropDown'); //
+  }
   // ------------ Update Payslip Form ---------------------
   get roll__no() {
     return this.fetchPayslipForm.get('roll__no'); //
@@ -221,14 +279,14 @@ export class AccountantComponent implements OnInit {
   get total_Amount() {
     return this.updatePayslipForm.get('total_Amount'); //
   }
-  get modeOfPayment() {
-    return this.updatePayslipForm.get('modeOfPayment'); //
-  }
   get edu_board() {
     return this.updatePayslipForm.get('edu_board'); //
   }
   get totalInstallments() {
     return this.updatePayslipForm.get('totalInstallments'); //
+  }
+  get updateFile() {
+    return this.updatePayslipForm.get('updateFile');
   }
   get remark() {
     return this.updatePayslipForm.get('remark'); //
@@ -288,6 +346,9 @@ export class AccountantComponent implements OnInit {
 
   ngOnInit(): void {
     this.user = localStorage.getItem('user');
+
+    this.activeTab = JSON.parse(localStorage.getItem('currentTab') || '');
+
     this.user = JSON.parse(this.user);
     if (this.user.role != 'Accountant' && this.user.role != 'Admin') {
       this.router.navigate(['/dashboard']);
@@ -328,13 +389,26 @@ export class AccountantComponent implements OnInit {
           row.push(this.nextDueDate(account));
           // row.push(account.nextDueDate); //Check
           this.data.push(row);
+
+          //Confirmation File Image
+          const conFile = this.account.confirmationFile;
+          if (conFile != undefined || conFile != null) {
+            this.confirmationFile =
+              'http://localhost:3000/44ee3569767ef5464ac7154a434de52b';
+          } else {
+            this.confirmationFile = '';
+          }
         });
       }
     });
     this.createpaySlipForm(); //New payslip Form
     this.createFetchpayslipForm(); //New payslip Form
+    this.createFeePaySlipForm(); //New payslip Form
+    this.createChequeStatusForm(); //Cheque Status Form
+    this.createUpdateChequeStatusForm(); //Cheque Status Form
     this.updatepaySlipForm(); //Update payslip Form
     this.createIdCardForm(); //FeesCard Form
+    this.createPayslipFormSystem();
   }
 
   // Converting All accounts Table to Excel File
@@ -355,29 +429,29 @@ export class AccountantComponent implements OnInit {
   logfileName: string =
     new Date().toLocaleString().toString() + '_LogAccounts.xlsx';
 
-  passwd_allAccounts(){
-      var password = prompt('Enter the password to download the file:');
-      if(password == "teacher"){
-        this.export();   
-      }else{
-        alert("Incorrect password! Please try again.");
-      }
+  passwd_allAccounts() {
+    var password = prompt('Enter the password to download the file:');
+    if (password == 'teacher') {
+      this.export();
+    } else {
+      alert('Incorrect password! Please try again.');
+    }
   }
-  passwd_pendingAccounts(){
-      var password = prompt('Enter the password to download the file:');
-      if(password == "teacher"){
-        this.exportPending();   
-      }else{
-        alert("Incorrect password! Please try again.");
-      }
+  passwd_pendingAccounts() {
+    var password = prompt('Enter the password to download the file:');
+    if (password == 'teacher') {
+      this.exportPending();
+    } else {
+      alert('Incorrect password! Please try again.');
+    }
   }
-  passwd_allLogAccounts(){
-      var password = prompt('Enter the password to download the file:');
-      if(password == "teacher"){
-        this.exportfeeslogger();   
-      }else{
-        alert("Incorrect password! Please try again.");
-      }
+  passwd_allLogAccounts() {
+    var password = prompt('Enter the password to download the file:');
+    if (password == 'teacher') {
+      this.exportfeeslogger();
+    } else {
+      alert('Incorrect password! Please try again.');
+    }
   }
 
   export(): void {
@@ -443,7 +517,7 @@ export class AccountantComponent implements OnInit {
     this.payslipForm = this.fb.group({
       rollno: ['', Validators.required],
       totalAmount: ['', Validators.required],
-      mop: ['', Validators.required],
+      file: ['', Validators.required],
       board: ['', Validators.required],
       noOfInstallments: ['', Validators.required],
       remarks: ['', Validators.required],
@@ -455,12 +529,20 @@ export class AccountantComponent implements OnInit {
       dateInstallTwo: [''],
       dateInstallThree: [''],
       dateInstallFour: [''],
-      statusOne: ['', Validators.required],
+      statusOne: [''],
       statusTwo: [''],
       statusThree: [''],
       statusFour: [''],
     });
   }
+
+  onFileChange(event: any) {
+    if (event.target.files.length > 0) {
+      const file = event.target.files[0];
+      this.payslipForm.get('file')?.setValue(file);
+    }
+  }
+
   onSubmitPaylip(): void {
     let one = this.installOne != null ? this.installOne.value : 0;
     let two = this.installTwo != null ? this.installTwo.value : 0;
@@ -478,26 +560,112 @@ export class AccountantComponent implements OnInit {
     }
   }
   createPaySlip() {
-    this.accountService
-      .createAccount(this.payslipForm.value)
-      .subscribe((response) => {
-        if (response.success) {
-          this.paySlipAccount = response.account;
-          this.receiptNo = response.count;
-          this.paySlipAmount = this.paySlipAccount.installOne;
-          this.payslipActive = true;
-          this.activeTab = 'generatepayslip';
-          this.paySlipSuccess = response.msg;
-        } else {
-          this.paySlipError = response.msg;
-        }
-      });
+    const formData = new FormData();
+    formData.append('rollno', this.payslipForm.get('rollno')?.value);
+    formData.append('totalAmount', this.payslipForm.get('totalAmount')?.value);
+    formData.append('board', this.payslipForm.get('board')?.value);
+    formData.append(
+      'noOfInstallments',
+      this.payslipForm.get('noOfInstallments')?.value
+    );
+    formData.append('file', this.payslipForm.value.file);
+    formData.append('remarks', this.payslipForm.get('remarks')?.value);
+    formData.append('installOne', this.payslipForm.get('installOne')?.value);
+    formData.append('installTwo', this.payslipForm.get('installTwo')?.value);
+    formData.append(
+      'installThree',
+      this.payslipForm.get('installThree')?.value
+    );
+    formData.append('installFour', this.payslipForm.get('installFour')?.value);
+    formData.append(
+      'dateInstallOne',
+      this.payslipForm.get('dateInstallOne')?.value
+    );
+    formData.append(
+      'dateInstallTwo',
+      this.payslipForm.get('dateInstallTwo')?.value
+    );
+    formData.append(
+      'dateInstallThree',
+      this.payslipForm.get('dateInstallThree')?.value
+    );
+    formData.append(
+      'dateInstallFour',
+      this.payslipForm.get('dateInstallFour')?.value
+    );
+    console.log(formData);
+    this.accountService.createAccount(formData).subscribe((response) => {
+      if (response.success) {
+        console.log("Account created successfully");
+        window.location.reload();
+        // this.paySlipAccount = response.account;
+        // this.receiptNo = response.count;
+        // this.paySlipAmount = this.paySlipAccount.installOne;
+        // this.payslipActive = true;
+        // this.activeTab = 'generatepayslip';
+        // this.paySlipSuccess = response.msg;
+      } else {
+        console.log(response.msg);
+        // this.paySlipError = response.msg;
+      }
+    });
+  }
+  // Generate Payslip Form System
+  createPayslipFormSystem(): void {
+    this.genFeePaySlipSystemForm = this.fb.group({
+      receivedAmount: ['', Validators.required],
+      modeOfPayment: ['', Validators.required],
+    });
+  }
+  onGenFeePaySlipSystem(): void {
+    if (this.genFeePaySlipSystemForm.valid) {
+      console.log('Valid Form Details');
+      const modeOfPayment =
+        this.genFeePaySlipSystemForm.get('modeOfPayment')?.value;
+
+      if (modeOfPayment === 'cheque') {
+        const paymentAmount =
+          this.genFeePaySlipSystemForm.get('receivedAmount')?.value;
+        this.postChequeDetail.rollNo = this.currentAccountData.rollNo;
+        this.postChequeDetail.submissionDate = new Date();
+        this.postChequeDetail.paymentAmount = paymentAmount;
+        this.postChequeDetail.status = 'due';
+
+        this.accountService
+          .saveNewChequeDetail(this.postChequeDetail)
+          .subscribe((response) => {
+            if (response.success) {
+              console.log(response.success);
+              this.updatePaySlip('generateChequePaySlip');
+            } else {
+              var postErrorAlert = response.msg;
+              console.log(postErrorAlert);
+            }
+          });
+      }
+      else {
+        this.updatePaySlip('generatePaySlip');
+      }
+    }
+    else {
+      console.log('Go to hell');
+    }
   }
   // ------------------------- Fetch Payslip Form-----------------
   // Validaition
   createFetchpayslipForm(): void {
     this.fetchPayslipForm = this.fb.group({
       roll__no: ['', Validators.required],
+    });
+  }
+  createFeePaySlipForm(): void {
+    this.onGenFeePaySlipForm = this.fb.group({
+      genPayslipRollNo: ['', Validators.required],
+    });
+  }
+  createChequeStatusForm(): void {
+    this.onChequeStatusForm = this.fb.group({
+      chequeStatusRollNo: ['', Validators.required],
     });
   }
   onFetchPaySlip(): void {
@@ -511,6 +679,118 @@ export class AccountantComponent implements OnInit {
       this.paySlipError = 'All fields are required';
     }
   }
+  // Generate Fee Payslip Form
+  onGenFeePaySlip(): void {
+    if (this.onGenFeePaySlipForm.valid) {
+      console.log('Gen Payslip');
+      const rollNo = this.onGenFeePaySlipForm.value.genPayslipRollNo;
+      this.ngOnInit();
+      this.accounts.forEach((account) => {
+        if (rollNo == account.rollNo) {
+          this.autoFillFeePayslipForm(account);
+        }
+      });
+    } else {
+      this.paySlipError = 'All fields are required';
+    }
+  }
+
+  // Cheque Status Form
+  onChequeStatus(): void {
+    if (this.onChequeStatusForm.valid) {
+      console.log('Cheque Status');
+      this.findTheChequeDetails();
+      this.accounts.forEach((account) => {
+        // if (this.onGenFeePaySlipForm.value.genPayslipRollNo == account.rollNo) {
+        //   this.autoFillFeePayslipForm(account);
+        // }
+      });
+    } else {
+      this.chequeStatusRollNoError =
+        'Please Enter Roll No to Fetch Cheque Details!';
+    }
+  }
+
+  createUpdateChequeStatusForm() {
+    this.onUpdateChequeStatusForm = this.fb.group({
+      chequeApprovedDate: ['', Validators.required],
+      changeChequeStatusDropDown: ['', Validators.required],
+    });
+  }
+
+  // Updating Cheque Status Form
+  onUpdateChequeStatus(): void {
+    if (this.onUpdateChequeStatusForm.valid) {
+      console.log('Updated Cheque Status');
+      console.log(this.chequeDetails);
+      var filterResult = this.chequeDetails.filter((_) => _.status === 'due');
+      var approvedDate =
+        this.onUpdateChequeStatusForm.get('chequeApprovedDate')?.value;
+      var status = this.onUpdateChequeStatusForm.get(
+        'changeChequeStatusDropDown'
+      )?.value;
+      console.log(filterResult);
+      this.updateChequeDetail.rollNo = filterResult[0].rollNo;
+      this.updateChequeDetail.paymentAmount = filterResult[0].paymentAmount;
+      this.updateChequeDetail.submissionDate = filterResult[0].submissionDate;
+      this.updateChequeDetail.approvedDate = approvedDate;
+      this.updateChequeDetail.status = status;
+      this.accountService
+        .updateOldChequeDetail(this.updateChequeDetail)
+        .subscribe((response) => {
+          if (response.success) {
+            console.log('Data Logged successfully');
+            this.accountService.fetchAccounts().subscribe((response) => {
+              if (response.success) {
+                this.updatedAccounts = response.accounts;
+                this.currentAccountData = this.updatedAccounts.filter(account => account.rollNo === this.updateChequeDetail.rollNo)[0];
+                this.globalChequeDeposit = this.currentAccountData.totalFeeAmountReceived + this.updateChequeDetail.paymentAmount;
+                this.updatePaySlip('updateChequeDeposit');
+              }
+            });
+            // window.location.reload();
+          } else {
+            var errorAlert = response.msg;
+            console.log(errorAlert);
+          }
+        });
+    } else {
+      this.paySlipError = 'All fields are required';
+    }
+  }
+
+  // Validaition
+  autoFillFeePayslipForm(account: Account) {
+    this.arrayOfInstallments = this.installmentDetail(account);
+    this.displayGenSysToggle = true;
+    this.currentAccountData = account;
+    // this.updatePayslipForm.patchValue({
+    //   roll_No: account.rollNo,
+    //   total_Amount: account.totalFeeAmount,
+    //   edu_board: account.board,
+    //   totalInstallments: account.noOfInstallment,
+    //   remark: account.remarks,
+    //   install_One: account.installOne,
+    //   install_Two: account.installTwo,
+    //   install_Three: account.installThree,
+    //   install_Four: account.installFour,
+    //   dateInstall_One: account.installDateOne,
+    //   dateInstall_Two: account.installDateTwo,
+    //   dateInstall_Three: account.installDateThree,
+    //   dateInstall_Four: account.installDateFour,
+    //   status_One: account.statusOne != true ? 'due' : 'paid',
+    //   status_Two: account.statusTwo != true ? 'due' : 'paid',
+    //   status_Three: account.statusThree != true ? 'due' : 'paid',
+    //   status_Four: account.statusFour != true ? 'due' : 'paid',
+    // });
+  }
+
+  calculateStuff() {
+    return (
+      this.currentAccountData.totalFeeAmount -
+      this.currentAccountData.totalFeeAmountReceived
+    );
+  }
   // -------------------------Payslip Form-----------------
   // Validaition
   autoFillForm(account: Account) {
@@ -519,7 +799,6 @@ export class AccountantComponent implements OnInit {
     this.updatePayslipForm.patchValue({
       roll_No: account.rollNo,
       total_Amount: account.totalFeeAmount,
-      modeOfPayment: account.modeOfPayment,
       edu_board: account.board,
       totalInstallments: account.noOfInstallment,
       remark: account.remarks,
@@ -542,33 +821,48 @@ export class AccountantComponent implements OnInit {
     this.updatePayslipForm = this.fb.group({
       roll_No: ['', Validators.required],
       total_Amount: ['', Validators.required],
-      modeOfPayment: ['', Validators.required],
       edu_board: ['', Validators.required],
       totalInstallments: ['', Validators.required],
+      updateFile: [''],
       remark: ['', Validators.required],
-      install_One: ['', Validators.required],
+      install_One: [''],
       install_Two: [''],
       install_Three: [''],
       install_Four: [''],
-      dateInstall_One: ['', Validators.required],
+      dateInstall_One: [''],
       dateInstall_Two: [''],
       dateInstall_Three: [''],
       dateInstall_Four: [''],
-      status_One: ['', Validators.required],
+      status_One: [''],
       status_Two: [''],
       status_Three: [''],
       status_Four: [''],
     });
   }
 
+  onUpdatedFileChange(event: any) {
+    if (event.target.files.length > 0) {
+      const updated_file = event.target.files[0];
+      this.updatePayslipForm.get('updateFile')?.setValue(updated_file);
+    }
+  }
+
   onUpdatePaylip(): void {
-    let one = this.install_One != null ? this.install_One.value : 0;
-    let two = this.install_Two != null ? this.install_Two.value : 0;
-    let three = this.install_Three != null ? this.install_Three.value : 0;
-    let four = this.install_Four != null ? this.install_Four.value : 0;
+    let firstInstAmount = this.updatePayslipForm.get('install_One')?.value;
+    let secondInstAmount = this.updatePayslipForm.get('install_Two')?.value;
+    let thirdInstAmount = this.updatePayslipForm.get('install_Three')?.value;
+    let fourthInstAmount = this.updatePayslipForm.get('install_Four')?.value;
+    let one = (firstInstAmount === "" || undefined || null) ? 0 : firstInstAmount;
+    console.log('One', one);
+    let two = (secondInstAmount === "" || undefined || null) ? 0 : secondInstAmount;
+    console.log('Two', two);
+    let three = (thirdInstAmount === "" || undefined || null) ? 0 : thirdInstAmount;
+    console.log('Three', three);
+    let four = (fourthInstAmount === "" || undefined || null) ? 0 : fourthInstAmount;
+    console.log('Four', four);
     if (this.updatePayslipForm.valid) {
-      if (one + two + three + four == this.total_Amount?.value)
-        this.updatePaySlip();
+      if ((parseInt(one) + parseInt(two) + parseInt(three) + parseInt(four)) == this.total_Amount?.value)
+        this.updatePaySlip('updateinstallment');
       else {
         this.updatePaySlipError =
           'All Installments do not add up to total amount. Please Check.';
@@ -577,30 +871,126 @@ export class AccountantComponent implements OnInit {
       this.updatePaySlipError = 'All fields are required';
     }
   }
-  updatePaySlip() {
-    this.accountService
-      .updateAccount(this.updatePayslipForm.value)
-      .subscribe((response) => {
+  updatePaySlip(purpose : string) {
+    const formData = new FormData();
+    if(purpose == 'updateinstallment') {
+      formData.append('_id', this.currentAccountData._id);
+      formData.append('roll_No', this.updatePayslipForm.get('roll_No')?.value);
+      formData.append(
+        'total_Amount',
+        this.updatePayslipForm.get('total_Amount')?.value
+      );
+      formData.append(
+        'totalDeposit',
+        this.currentAccountData.totalFeeAmountReceived.toString()
+      );
+      formData.append(
+        'edu_board',
+        this.updatePayslipForm.get('edu_board')?.value
+      );
+      formData.append(
+        'totalInstallments',
+        this.updatePayslipForm.get('totalInstallments')?.value
+      );
+      formData.append('updateFile', this.updatePayslipForm.value.updateFile);
+      formData.append('remark', this.updatePayslipForm.get('remark')?.value);
+      formData.append(
+        'install_One',
+        this.updatePayslipForm.get('install_One')?.value
+      );
+      formData.append(
+        'install_Two',
+        this.updatePayslipForm.get('install_Two')?.value
+      );
+      formData.append(
+        'install_Three',
+        this.updatePayslipForm.get('install_Three')?.value
+      );
+      formData.append(
+        'install_Four',
+        this.updatePayslipForm.get('install_Four')?.value
+      );
+      formData.append(
+        'dateInstall_One',
+        this.updatePayslipForm.get('dateInstall_One')?.value
+      );
+      formData.append(
+        'dateInstall_Two',
+        this.updatePayslipForm.get('dateInstall_Two')?.value
+      );
+      formData.append(
+        'dateInstall_Three',
+        this.updatePayslipForm.get('dateInstall_Three')?.value
+      );
+      formData.append(
+        'dateInstall_Four',
+        this.updatePayslipForm.get('dateInstall_Four')?.value
+      );
+      formData.append(
+        'status_One',
+        this.updatePayslipForm.get('status_One')?.value
+      );
+      formData.append(
+        'status_Two',
+        this.updatePayslipForm.get('status_Two')?.value
+      );
+      formData.append(
+        'status_Three',
+        this.updatePayslipForm.get('status_Three')?.value
+      );
+      formData.append(
+        'status_Four',
+        this.updatePayslipForm.get('status_Four')?.value
+      );
+
+      this.accountService.updateAccount(formData).subscribe((response) => {
+        if (response.success) {
+          console.log(response.account);
+          this.receiptNo = response.count;
+        } else {
+          this.updatePaySlipError = response.msg;
+        }
+      });
+    }
+    else {
+      var deposit =0;
+      if(purpose === 'generateChequePaySlip')
+        deposit = this.currentAccountData.totalFeeAmountReceived;
+      else if(purpose === 'updateChequeDeposit')
+        deposit = this.globalChequeDeposit; 
+      else
+        deposit = this.currentAccountData.totalFeeAmountReceived + parseInt(this.genFeePaySlipSystemForm.get('receivedAmount')?.value);
+
+      var postAccountData = {
+        _id : this.currentAccountData._id,
+        roll_No : this.currentAccountData.student.rollNo,
+        total_Amount : this.currentAccountData.totalFeeAmount,
+        edu_board : this.currentAccountData.board,
+        totalInstallments : this.currentAccountData.noOfInstallment,
+        updateFile : this.currentAccountData.originalName,
+        totalDeposit : deposit,
+        remark : this.currentAccountData.remarks,
+        install_One : this.currentAccountData.installOne,
+        install_Two : this.currentAccountData.installTwo,
+        install_Three : this.currentAccountData.installThree,
+        install_Four : this.currentAccountData.installFour,
+        dateInstall_One : this.currentAccountData.installDateOne,
+        dateInstall_Two : this.currentAccountData.installDateTwo,
+        dateInstall_Three : this.currentAccountData.installDateThree,
+        dateInstall_Four : this.currentAccountData.installDateFour,
+        status_One : this.currentAccountData.statusOne,
+        status_Two : this.currentAccountData.statusTwo,
+        status_Three : this.currentAccountData.statusThree,
+        status_Four : this.currentAccountData.statusFour
+      };
+
+      this.accountService.updateAccount(postAccountData).subscribe((response) => {
         if (response.success) {
           this.paySlipAccount = response.account;
           this.receiptNo = response.count;
           this.accounts.forEach((account) => {
             if (account.rollNo == this.paySlipAccount.rollNo) {
-              if (account.statusOne != this.paySlipAccount.statusOne) {
-                this.paySlipAmount += this.paySlipAccount.installOne;
-              }
-
-              if (account.statusTwo != this.paySlipAccount.statusTwo) {
-                this.paySlipAmount += this.paySlipAccount.installTwo;
-              }
-
-              if (account.statusThree != this.paySlipAccount.statusThree) {
-                this.paySlipAmount += this.paySlipAccount.installThree;
-              }
-
-              if (account.statusFour != this.paySlipAccount.statusFour) {
-                this.paySlipAmount += this.paySlipAccount.installFour;
-              }
+              this.paySlipAmount = parseInt(this.genFeePaySlipSystemForm.get('receivedAmount')?.value);
             }
           });
           this.payslipActive = true;
@@ -610,6 +1000,8 @@ export class AccountantComponent implements OnInit {
           this.updatePaySlipError = response.msg;
         }
       });
+
+    }
   }
   // --------------------Fees Card-----------------------
   // Validation
@@ -666,6 +1058,13 @@ export class AccountantComponent implements OnInit {
     this.arrayOfInstallments = [];
     this.display = 'none';
   }
+  openChequeStatusModal() {
+    console.log('modal cheque');
+    this.chequeStatusDisplay = 'block';
+  }
+  onCloseChequeStatus() {
+    this.chequeStatusDisplay = 'none';
+  }
   pendingInstallments(account: any): number {
     var count = 0;
     if (account.statusOne) {
@@ -717,24 +1116,24 @@ export class AccountantComponent implements OnInit {
     var installArray = [];
     this.smsAccount = account;
     if (account.installOne != null && account.statusOne) {
-      installArray.push({ date: account.installDateOne, status: 'Paid' });
+      installArray.push({ date: account.installDateOne, amount: account.installOne, status: 'Paid' });
     } else if (account.installOne != null) {
-      installArray.push({ date: account.installDateOne, status: 'Due' });
+      installArray.push({ date: account.installDateOne, amount: account.installOne, status: 'Due' });
     }
     if (account.installTwo != null && account.statusTwo) {
-      installArray.push({ date: account.installDateTwo, status: 'Paid' });
+      installArray.push({ date: account.installDateTwo, amount: account.installTwo, status: 'Paid' });
     } else if (account.installTwo != null) {
-      installArray.push({ date: account.installDateTwo, status: 'Due' });
+      installArray.push({ date: account.installDateTwo,  amount: account.installTwo, status: 'Due' });
     }
     if (account.installThree != null && account.statusThree) {
-      installArray.push({ date: account.installDateThree, status: 'Paid' });
+      installArray.push({ date: account.installDateThree, amount: account.installThree, status: 'Paid' });
     } else if (account.installThree != null) {
-      installArray.push({ date: account.installDateThree, status: 'Due' });
+      installArray.push({ date: account.installDateThree, amount: account.installThree, status: 'Due' });
     }
     if (account.installFour != null && account.statusFour) {
-      installArray.push({ date: account.installDateFour, status: 'Paid' });
+      installArray.push({ date: account.installDateFour, amount: account.installFour, status: 'Paid' });
     } else if (account.installFour != null) {
-      installArray.push({ date: account.installDateFour, status: 'Due' });
+      installArray.push({ date: account.installDateFour, amount: account.installFour, status: 'Due' });
     }
 
     return installArray;
@@ -853,29 +1252,28 @@ export class AccountantComponent implements OnInit {
     this.logger.fetchAccountantLogs().subscribe((response) => {
       if (response.success) {
         this.accountantLogs = response.logs;
-        this.accountantLogs.forEach((log)=> {
-           var flag = 0;
-           this.accountantLogs.forEach((element) => {
-             if (element.rollNo == log.rollNo) {
-               flag = 1;
-             }
-           });
-           if (flag == 0) {
-             this.accountantLogs.push(log);
-           }
-            //For Excel
-            var logRow: any[] = [];
-            logRow.push(log.paymentDate);
-            logRow.push(log.rollNo);
-            logRow.push(log.studentFullName);
-            logRow.push(log.studentFatherName);
-            logRow.push(log.batch);
-            logRow.push(log.paymentAmount);
-            logRow.push(log.modeOfPayment);
-            this.logdata.push(logRow);
+        this.accountantLogs.forEach((log) => {
+          var flag = 0;
+          this.accountantLogs.forEach((element) => {
+            if (element.rollNo == log.rollNo) {
+              flag = 1;
+            }
+          });
+          if (flag == 0) {
+            this.accountantLogs.push(log);
+          }
+          //For Excel
+          var logRow: any[] = [];
+          logRow.push(log.paymentDate);
+          logRow.push(log.rollNo);
+          logRow.push(log.studentFullName);
+          logRow.push(log.studentFatherName);
+          logRow.push(log.batch);
+          logRow.push(log.paymentAmount);
+          logRow.push(log.modeOfPayment);
+          this.logdata.push(logRow);
         });
       } else {
-
         console.log(response.message);
       }
     });
@@ -888,10 +1286,10 @@ export class AccountantComponent implements OnInit {
     this.accLogs.studentFatherName = this.paySlipAccount.student.fatherName;
     this.accLogs.batch = this.paySlipAccount.student.batch.batch.toString();
     this.accLogs.paymentAmount = this.paySlipAmount;
-    if(this.paySlipAccount.modeOfPayment.toLowerCase() === "cash")
-    { this.accLogs.modeOfPayment = "Cash" }
-    else{ 
-      this.accLogs.modeOfPayment = "UPI"
+    if (this.paySlipAccount.modeOfPayment.toLowerCase() === 'cash') {
+      this.accLogs.modeOfPayment = 'Cash';
+    } else {
+      this.accLogs.modeOfPayment = 'UPI';
     }
 
     this.logger.postTheLogs(this.accLogs).subscribe((response) => {
@@ -902,5 +1300,27 @@ export class AccountantComponent implements OnInit {
         console.log(logErrorAlert);
       }
     });
+  }
+
+  downloadConfirmation(account: Account) {
+    const fileName = account.confirmationFile;
+    const fileUrl = 'http://localhost:3000/' + fileName;
+    FileSaver.saveAs(fileUrl, 'image.jpg');
+  }
+
+  findTheChequeDetails() {
+    var rollNo = this.onChequeStatusForm.get('chequeStatusRollNo')?.value;
+    this.accountService
+      .getChequeDetailByRollNo(rollNo)
+      .subscribe((response) => {
+        if (response.success) {
+          console.log(response.msg);
+          console.log(response.chequeDetails);
+          this.chequeDetails = response.chequeDetails;
+          this.displayChequeStatusDetails = true;
+        } else {
+          this.delAccErrorAlert = response.msg;
+        }
+      });
   }
 }

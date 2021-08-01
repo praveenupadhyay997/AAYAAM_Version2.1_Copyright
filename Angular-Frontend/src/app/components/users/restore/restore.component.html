@@ -152,9 +152,10 @@
                       <button
                         type="button"
                         class="btn btn-outline-info btn-sm mb-2"
-                        data-toggle="modal"
-                        data-target="#exampleModalCenterRestoreAdmittedStudent"
+                        (click)="restoreAdmittedStudent(student)"
                       >
+                      <!-- data-toggle="modal"
+                        data-target="#exampleModalCenterRestoreAdmittedStudent" -->
                         Restore
                       </button>
                       <!-- Restore Modal For Admitted Student-->
@@ -185,7 +186,7 @@
                           <div class="modal-footer">
                             <button
                               type="button"
-                              (click)="restoreAdmittedStudent(student)"
+                              
                               class="btn btn-primary yes-button"
                               data-dismiss="modal"
                             >
@@ -206,9 +207,10 @@
                       <button
                         type="button"
                         class="btn btn-outline-danger btn-sm ml-2 mb-2"
-                        data-toggle="modal"
-                        data-target="#exampleModalCenterAdmittedStudent"
+                        (click)="deleteStudent(student)"
                       >
+                      <!-- data-toggle="modal"
+                        data-target="#exampleModalCenterAdmittedStudent" -->
                         Delete
                       </button>
                       <!-- Delete Modal For Admitted Student Confirmation 1-->
@@ -288,7 +290,7 @@
                           <div class="modal-footer">
                             <button type="button" 
                             class="btn btn-secondary yes-button"
-                            (click)="deleteStudent(student)"
+                            
                             data-dismiss="modal"
                             >
                               Yes, I am Sure.
@@ -381,7 +383,7 @@
                         | paginate
                           : {
                               id: 'listing_pagination_A',
-                              itemsPerPage: 5,
+                              itemsPerPage: 10,
                               currentPage: page_A,
                               totalItems: totalRecords_A
                             }
@@ -397,18 +399,19 @@
                       <button
                         type="button"
                         class="btn btn-outline-info btn-sm ml-2 mb-2"
-                        data-toggle="modal"
-                        data-target="#exampleModalCenterRestoreDemoStudent"
+                        (click)="restoreDemoStudent(student)"
                       >
+                      <!-- data-toggle="modal"
+                        data-target="#exampleModalCenterRestoreDemoStudent" -->
                         Restore
                       </button>
                       <button
                         type="button"
                         (click)="deleteDemoStudent(student)"
                         class="btn btn-outline-danger btn-sm ml-2 mb-2"
-                        data-toggle="modal"
-                        data-target="#exampleModalCenterDemoStudent1"
                       >
+                      <!-- data-toggle="modal"
+                        data-target="#exampleModalCenterDemoStudent1" -->
                         Delete
                       </button>
                     </td>
@@ -430,12 +433,12 @@
         id="card"
         [ngClass]="{ active: activeTab === 'card' }"
       >
-        <div class="alert alert-danger mb-4" *ngIf="deleteErrorAlert">
+        <!-- <div class="alert alert-danger mb-4" *ngIf="deleteErrorAlert">
           {{ deleteErrorAlert }}
         </div>
         <div class="alert alert-success mb-4" *ngIf="deleteSuccessAlert">
           {{ deleteSuccessAlert }}
-        </div>
+        </div> -->
         <div class="card">
           <div class="container p-3">
             <div class="row">
@@ -490,7 +493,7 @@
                           | paginate
                             : {
                                 id: 'listing_pagination',
-                                itemsPerPage: 5,
+                                itemsPerPage: 10,
                                 currentPage: page,
                                 totalItems: totalRecords
                               }
@@ -504,19 +507,21 @@
                       <td>
                         <button
                           class="btn btn-outline-info btn-sm mb-2"
-                          (click)="restoreExamCell()"
+                          (click)="restoreExamCell(upload)"
                           data-toggle="modal"
-                          data-target="#exampleModalCenterRestoreExamData"
+                          
                         >
+                        <!-- data-target="#exampleModalCenterRestoreExamData" -->
                           Restore
                         </button>
 
                         <button
                           class="btn btn-outline-danger btn-sm ml-0 mb-2"
                           (click)="deleteUpload(upload)"
-                          data-toggle="modal"
-                          data-target="#exampleModalCenterExamData1"
+                          
                         >
+                        <!-- data-toggle="modal"
+                          data-target="#exampleModalCenterExamData1" -->
                           Delete
                         </button>
                       </td>

@@ -160,9 +160,11 @@
                       <button
                         type="button"
                         class="btn btn-outline-danger btn-sm ml-2 mb-2"
-                        data-toggle="modal"
-                        data-target="#exampleModalCenterAdmittedStudent"
+                        (click)="deactivateStudent(student)"
+                        
                       >
+                      <!-- data-toggle="modal"
+                        data-target="#exampleModalCenterAdmittedStudent" -->
                         Delete
                       </button>
                     </td>
@@ -200,7 +202,7 @@
                           <div class="modal-footer">
                             <button
                               type="button"
-                              (click)="deactivateStudent(student)"
+                              
                               class="btn btn-secondary yes-button"
                               data-dismiss="modal"
                             >
@@ -304,7 +306,7 @@
                         | paginate
                           : {
                               id: 'listing_pagination_A',
-                              itemsPerPage: 5,
+                              itemsPerPage: 10,
                               currentPage: page_A,
                               totalItems: totalRecords_A
                             }
@@ -326,14 +328,58 @@
                       </button>
                       <button
                         type="button"
-                        (click)="deleteDemoStudent(student)"
                         class="btn btn-outline-danger btn-sm ml-2 mb-2"
-                        data-toggle="modal"
-                        data-target="#exampleModalCenterDemoStudent"
+                        (click)="deactivateDemoStudent(student)"                        
                       >
+                      <!-- data-toggle="modal"
+                        data-target="#exampleModalCenterDemoStudent" -->
                         Delete
                       </button>
                     </td>
+                    <!-- Delete Modal For Demo Student -->
+                    <div
+                    class="modal fade"
+                    id="exampleModalCenterDemoStudent"
+                    tabindex="-1"
+                    role="dialog"
+                    aria-labelledby="exampleModalCenterTitle"
+                    aria-hidden="true"
+                    >
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="exampleModalLongTitle">Alert!</h5>
+                          <button
+                            type="button"
+                            class="close"
+                            data-dismiss="modal"
+                            aria-label="Close"
+                          >
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          Are Your Completely Sure, You Want to Delete the selected Demo Student?
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" 
+                          class="btn btn-secondary yes-button" 
+                          
+                          data-dismiss="modal"
+                          >
+                            Yes, I am Sure.
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-primary no-button"
+                            data-dismiss="modal"
+                          >
+                            No, Let's Go Back.
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    </div>
                   </tr>
                 </tbody>
               </table>
@@ -761,43 +807,3 @@
   </div>
 </div>
 
-<!-- Delete Modal For Demo Student -->
-<div
-  class="modal fade"
-  id="exampleModalCenterDemoStudent"
-  tabindex="-1"
-  role="dialog"
-  aria-labelledby="exampleModalCenterTitle"
-  aria-hidden="true"
->
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLongTitle">Alert!</h5>
-        <button
-          type="button"
-          class="close"
-          data-dismiss="modal"
-          aria-label="Close"
-        >
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        Are Your Completely Sure, You Want to Delete the selected Demo Student?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary yes-button">
-          Yes, I am Sure.
-        </button>
-        <button
-          type="button"
-          class="btn btn-primary no-button"
-          data-dismiss="modal"
-        >
-          No, Let's Go Back.
-        </button>
-      </div>
-    </div>
-  </div>
-</div>

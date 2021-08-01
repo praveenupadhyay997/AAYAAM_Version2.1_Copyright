@@ -58,6 +58,10 @@ const AayaamSchema = new mongoose.Schema({
 		type: Date,
 		default: Date.now,
 	},
+	isDeleted: {
+		type: Boolean,
+		required: true,
+	},
 });
 
 const DemoStudent = (module.exports = mongoose.model(

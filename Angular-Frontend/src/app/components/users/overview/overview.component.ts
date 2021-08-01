@@ -353,8 +353,16 @@ export class OverviewComponent implements OnInit {
   sortStuName() {
     this.stuName = !this.stuName;
   }
-  // Delete Admitted Student
+  // Deactivate Admitted Student
   deactivateStudent(student: Student): void {
+    let confirm = window.confirm(
+      'Are you sure you want to delete this admitted student?'
+    );
+    let confirm_again = window.confirm(
+      'ARE YOU COMPLETELY SURE WITH YOUR ACTION. CONTINUE?'
+    );
+    if (confirm) {
+      if (confirm_again) {
     // Removing From the UI
     this.students = this.students.filter((s: Student) => s._id !== student._id);
     this.dashboardService
@@ -366,32 +374,26 @@ export class OverviewComponent implements OnInit {
           this.deleteErrorAlert = response.msg;
         }
       });
-    // if (confirm) {
-    //   // Removing From the UI
-    //   this.students = this.students.filter(
-    //     (s: Student) => s._id !== student._id
-    //   );
-    //   // this.dashboardService.deleteStudent(student._id).subscribe((response) => {
-    //   //   if (response.success) {
-    //   //     this.deleteSuccessAlert = response.msg;
-    //   //   } else {
-    //   //     this.deleteErrorAlert = response.msg;
-    //   //   }
-    //   // });
-    // }
+    }
+   }
   }
 
-  deleteDemoStudent(student: DemoStudent): void {
+  // Deactivate Demo Student
+  deactivateDemoStudent(student: DemoStudent): void {
     let confirm = window.confirm(
-      'Are you sure you wany to delete this demo student?'
+      'Are you sure you want to delete this demo student?'
+    );
+    let confirm_again = window.confirm(
+      'ARE YOU COMPLETELY SURE WITH YOUR ACTION. CONTINUE?'
     );
     if (confirm) {
+      if (confirm_again) {
       // Removing From the UI
       this.demoStu = this.demoStu.filter(
         (u: DemoStudent) => u._id !== student._id
       );
       this.dashboardService
-        .deleteDemoStudent(student._id)
+        .deactivateDemoStudent(student._id)
         .subscribe((response) => {
           if (response.success) {
             this.deleteSuccessAlert = response.msg;
@@ -399,6 +401,7 @@ export class OverviewComponent implements OnInit {
             this.deleteErrorAlert = response.msg;
           }
         });
+      }
     }
   }
   // -------------------- Modal ------------------------

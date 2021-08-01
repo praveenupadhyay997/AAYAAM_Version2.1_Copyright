@@ -55,7 +55,7 @@ router.delete('/deleteStudent/:id', (req, res) => {
 });
 //@route GET /dashboard/demoStudents
 router.get('/demoStudents', (req, res) => {
-	DemoStudent.find({}, (error, demo) => {
+	DemoStudent.find({ isDeleted: false }, (error, demo) => {
 		if (error) throw error;
 		else if (demo) {
 			res.json({
@@ -126,6 +126,27 @@ router.post('/deactivate/:id', (req, res) => {
 				});
 			} else {
 				res.json({ success: false, msg: 'Student Not Found' });
+			}
+		},
+	);
+});
+
+// Deactivate Demo Student
+router.post('/deactivateDemoStudent/:id', (req, res) => {
+	var id = req.params.id;
+	req.body.isDeleted = true;
+	DemoStudent.findByIdAndUpdate(
+		{ _id: id },
+		{ isDeleted: req.body.isDeleted },
+		(err, demostudent) => {
+			if (err) throw err;
+			if (demostudent) {
+				res.json({
+					success: true,
+					msg: 'Demo Student Deleted. If you think this was a mistake, Please go to the Restore Point and Restore. ',
+				});
+			} else {
+				res.json({ success: false, msg: 'Demo Student Not Found' });
 			}
 		},
 	);

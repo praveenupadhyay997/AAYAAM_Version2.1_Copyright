@@ -13,6 +13,7 @@ router.post('/', (req, res) => {
 		useNumbers: true,
 	});
 
+	req.body.isDeleted = false;
 	let demoStudent = new DemoStudent({
 		referenceId: id,
 		fullName: req.body.name,
@@ -27,6 +28,7 @@ router.post('/', (req, res) => {
 		referenceMedium: req.body.reference_from,
 		counsellorName: req.body.cname,
 		counsellorCabin: req.body.cabin,
+		isDeleted: req.body.isDeleted,
 	});
 	DemoStudent.createDemoStudent(demoStudent, (err, demo) => {
 		if (err) {

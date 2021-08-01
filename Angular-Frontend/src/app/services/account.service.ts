@@ -1,6 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { FormGroup } from '@angular/forms';
 import { Observable } from 'rxjs';
 
 const httpOptions = {
@@ -18,11 +17,14 @@ export class AccountService {
   deleteAccountUrl: string = 'http://localhost:3000/account/delete';
   updateAccountUrl: string = 'http://localhost:3000/account/update';
   sendSmsUrl: string = 'http://localhost:3000/account/sms';
+  saveChequeDetail: string = 'http://localhost:3000/chequeSystem/saveChequeDetails';
+  updateChequeDetail: string = 'http://localhost:3000/chequeSystem/update';
+  getChequeDetail: string = 'http://localhost:3000/chequeSystem/getAll';
 
   constructor(private http: HttpClient) {}
 
-  createAccount(payslipForm: FormGroup): Observable<any> {
-    return this.http.post(this.createAccountUrl, payslipForm, httpOptions);
+  createAccount(formData: FormData): Observable<any> {
+    return this.http.post(this.createAccountUrl, formData);
   }
   fetchAccounts(): Observable<any> {
     return this.http.get(this.fetchAllAccountsUrl, httpOptions);
@@ -31,15 +33,22 @@ export class AccountService {
     const url = `${this.deleteAccountUrl}/${id}`;
     return this.http.delete(url, httpOptions);
   }
-  updateAccount(updatePayslipForm: FormGroup): Observable<any> {
-    return this.http.post(
-      this.updateAccountUrl,
-      updatePayslipForm,
-      httpOptions
-    );
+  updateAccount(formData: any): Observable<any> {
+    return this.http.post(this.updateAccountUrl, formData);
   }
 
   sendSms(account: any): Observable<any> {
     return this.http.post(this.sendSmsUrl, account, httpOptions);
+  }
+  getChequeDetailByRollNo(rollNo: any): Observable<any> {
+    const url = `${this.getChequeDetail}/${rollNo}`;
+    return this.http.get(url, httpOptions);
+  }
+  saveNewChequeDetail(details: any): Observable<any> {
+    return this.http.post(this.saveChequeDetail, JSON.stringify(details), httpOptions);
+  }
+  updateOldChequeDetail(newDetails: any): Observable<any> {
+    let body = JSON.stringify(newDetails);
+    return this.http.post(this.updateChequeDetail, body, httpOptions);
   }
 }

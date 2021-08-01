@@ -17,6 +17,9 @@ export class ExamService {
   deleteUploadUrl: string = 'http://localhost:3000/examCell/delete';
   updateExamUrl: string = 'http://localhost:3000/examCell/update';
   sendSmsUrl: string = 'http://localhost:3000/examCell/sms';
+  sendListOfStudentUrl: string = 'http://localhost:3000/examCell/sendListOfStudent';
+  detailedSingleSmsUrl: string = 'http://localhost:3000/examCell/detailedSingleSms';
+  deactivateExamDataUrl: string = 'http://localhost:3000/examCell/deactivateExamData';
 
   constructor(private http: HttpClient) {}
 
@@ -39,5 +42,18 @@ export class ExamService {
 
   sendSms(details: any): Observable<any> {
     return this.http.post(this.sendSmsUrl, details, httpOptions);
+  }
+
+  sendListOfStudent(details: any): Observable<any> {
+    return this.http.post(this.sendListOfStudentUrl, details, httpOptions);
+  }
+
+  detailedSingleSms(details: any): Observable<any> {
+    return this.http.post(this.detailedSingleSmsUrl, details, httpOptions);
+  }
+
+  deactivateExamData(id: any): Observable<any> {
+    const url = `${this.deactivateExamDataUrl}/${id}`;
+    return this.http.post(url, httpOptions);
   }
 }

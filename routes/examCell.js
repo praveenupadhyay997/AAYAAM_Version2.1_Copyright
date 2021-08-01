@@ -58,12 +58,14 @@ router.post('/', upload.single('file'), (req, res) => {
 		},
 	});
 
+	req.body.isDeleted = false;
 	let upload = new Upload({
 		examName: req.body.exam_name,
 		batch: req.body.batch,
 		examDate: req.body.exam_date,
 		examFile: req.file.filename,
 		originalName: req.file.originalname,
+		isDeleted: req.body.isDeleted,
 	});
 	upload
 		.save()
@@ -130,7 +132,7 @@ saveInResult = function (upload, element) {
 // @desc Display upload table
 //  @route POST / msgsection
 router.get('/msgsection', (req, res) => {
-	Upload.find({})
+	Upload.find({ isDeleted: false })
 		.populate('batch')
 		.exec(function (error, uploads) {
 			if (error) throw error;
@@ -168,6 +170,27 @@ router.delete('/delete/:id', (req, res) => {
 			//res.json({ success: true, msg: 'Upload Deleted Successfully!' });
 		}
 	});
+});
+
+// Deactivate Message Section Data of ExamCell
+router.post('/deactivateExamData/:id', (req, res) => {
+	var id = req.params.id;
+	req.body.isDeleted = true;
+	Upload.findByIdAndUpdate(
+		{ _id: id },
+		{ isDeleted: req.body.isDeleted },
+		(err, upload) => {
+			if (err) throw err;
+			if (upload) {
+				res.json({
+					success: true,
+					msg: 'Exam Data Deleted for the particular Exam. If you think this was a mistake, Please go to the Restore Point and Restore. ',
+				});
+			} else {
+				res.json({ success: false, msg: 'Exam Data Not Found' });
+			}
+		},
+	);
 });
 
 //Update Exam Upload
@@ -210,6 +233,51 @@ router.post('/sms', (req, res) => {
 		);
 	});
 	res.json({ success: true, msg: 'SMS sent' });
+});
+
+//Send Single SMS
+router.post('/detailedSingleSms', (req, res) => {
+	var student = req.body.student;
+		Result.findOne(
+			{ rollno: student.rollNo, upload_details: req.body.upload._id },
+			(err, result) => {
+				if (err) throw err;
+				if (result) {
+					var data = JSON.stringify({
+						from: 'aayaam',
+						to: '91' + `${student.studentContact}`,
+						text: `Results:- Physics: ${result.physics} Chemistry: ${result.chemistry} Botany: ${result.botany} Zoology: ${result.zoology} Total:- ${result.score} Rank:- ${result.rank} -Aayaam Family.`,
+					});
+					sms.sendSms(data);
+				}
+			},
+		);
+	res.json({ success: true, msg: 'SMS sent' });
+});
+
+//Send List of Student to SMS
+router.post('/sendListOfStudent', (req, res) => {
+	var students = req.body.students;
+	var filterStudentToSMS = [];
+	for (let i = 0; i < students.length; i++) {
+		const student = students[i];
+		Result.findOne(
+			{ rollno: student.rollNo, upload_details: req.body.upload._id },
+			(err, result) => {
+				if (err) throw err;
+				if (result) {
+					filterStudentToSMS.push(student);
+					if(i == (students.length-1)){
+						res.json({ success: true, students:filterStudentToSMS , msg: 'Students Filtered Examwise' });
+					}	
+				}
+				else {
+					console.log("Student not found", student.rollNo);
+				}
+			},
+		);	
+	}
+	
 });
 
 module.exports = router;
